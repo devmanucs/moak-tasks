@@ -1,5 +1,6 @@
 import { Task } from "@/src/lib/storage";
 import { Pressable, Text, View } from "react-native";
+import { Trash2 } from "lucide-react-native";
 
 interface TaskCardProps {
   task: Task;
@@ -45,7 +46,7 @@ export function TaskCard({ task, onPress, onDelete }: TaskCardProps) {
           onPress={onDelete}
           className="border-t border-gray-100 px-4 py-2"
         >
-          <Text className="text-sm font-semibold text-red-500">apagar</Text>
+          <Text className="text-sm font-semibold text-red-500"><Trash2 /></Text>
         </Pressable>
       )}
     </Pressable>

@@ -5,7 +5,7 @@ import { StatusBar } from "expo-status-bar";
 import { useColorScheme } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import "../global.css";
-import { NAV_THEME } from "../lib/theme";
+import { NAV_THEME } from "../src/lib/theme";
 
 export default function RootLayout() {
   const colorScheme = useColorScheme() ?? "light";
@@ -13,6 +13,8 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <ThemeProvider value={NAV_THEME[colorScheme]}>
+        <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
+
         <Stack
           screenOptions={{
             headerShown: false,
@@ -20,7 +22,7 @@ export default function RootLayout() {
         >
           <Stack.Screen name="index" />
         </Stack>
-        <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
+
         <PortalHost />
       </ThemeProvider>
     </SafeAreaProvider>
