@@ -1,8 +1,10 @@
 import { Button } from "@/src/components/ui/button";
+import { Input } from "@/src/components/ui/input";
 import { TaskCard } from "@/src/components/ui/task-card";
 import { Task, storage } from "@/src/lib/storage";
 import { useEffect, useState } from "react";
-import { Alert, FlatList, Text, TextInput, View } from "react-native";
+import { PlusCircleIcon } from '@/src/components/ui/icons';
+import { Alert, FlatList, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export function HomeScreenFeature() {
@@ -78,18 +80,21 @@ export function HomeScreenFeature() {
       </View>
 
       <View className="flex-row gap-2 px-4 py-3">
-        <TextInput
+        <Input
           className="flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-800"
           placeholder="o que tem pra hoje?"
           value={newTaskTitle}
           onChangeText={setNewTaskTitle}
           placeholderTextColor="#9ca3af"
         />
-        <Button
-          onPress={handleAddTask}
-          title="Adicionar +"
-          className="w-fit"
-        />
+        <Button onPress={handleAddTask} className="w-fit" variant="default">r
+          <View className="flex-row items-center gap-2">
+            <PlusCircleIcon size={16} className="text-primary-foreground"/>
+            <Text className="text-primary-foreground font-semibold">
+              Adicionar
+            </Text>
+          </View>
+        </Button>
       </View>
 
       <FlatList
@@ -105,9 +110,7 @@ export function HomeScreenFeature() {
         contentContainerClassName="py-3"
         ListEmptyComponent={
           <Text className="mt-8 text-center text-base text-gray-400">
-            {loading
-              ? "carregando tarefas..."
-              : "finalmente sem tarefas"}
+            {loading ? "carregando tarefas..." : "finalmente sem tarefas"}
           </Text>
         }
       />
@@ -117,10 +120,11 @@ export function HomeScreenFeature() {
           onPress={() =>
             Alert.alert("Em desenvolvimento", "Check-in na academia")
           }
-          title="treinei hoje, haha"
-          variant="primary"
+          variant="default"
           className="w-full"
-        />
+        >
+          <Text className="text-primary-foreground">treinei hoje, haha</Text>
+        </Button>
       </View>
     </SafeAreaView>
   );
