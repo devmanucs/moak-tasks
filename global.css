@@ -1,58 +1,106 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
- 
+
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
+    /* Background: alabaster_grey-900 (#fafafa) */
+    --background: 0 0% 98%;
+    /* Foreground: jet_black (#142725) */
+    --foreground: 174 32% 12%;
+    
+    /* Card: pure white para saltar do fundo */
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
+    --card-foreground: 174 32% 12%;
+    
+    /* Popover: pure white */
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
+    --popover-foreground: 174 32% 12%;
+    
+    /* Primary: pine_teal (#142725) - O verde principal do Carvalho */
+    --primary: 173.68, 32.2%, 11.57%;
     --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 84.2% 60.2%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 63%;
-    --radius: 0.625rem;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-  }
- 
-  .dark:root {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
+    
+    /* Secondary: camel (#c09664) - O tom de madeira/carvalho */
+    --secondary: 33 42% 57%;
     --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 70.9% 59.4%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 300 0% 45%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
+    
+    /* Muted: alabaster_grey (#e8e8e8) */
+    --muted: 0 0% 91%;
+    /* Muted Foreground: dusty_olive (#647360) */
+    --muted-foreground: 107 9% 41%;
+    
+    /* Accent: sunlit_clay (#f3ad58) */
+    --accent: 33 87% 65%;
+    --accent-foreground: 174 32% 12%;
+    
+    /* Destructive: burnt_caramel (#bf6835) - Erros/Alertas em tom terroso */
+    --destructive: 22 57% 48%;
+    --destructive-foreground: 0 0% 98%;
+    
+    /* Border/Input: alabaster_grey (#e8e8e8) */
+    --border: 0 0% 91%;
+    --input: 0 0% 91%;
+    
+    /* Ring: pine_teal */
+    --ring: hsl(173.68, 32.2%, 11.57%);
+    
+    --radius: 1rem;
+    
+    /* Charts */
+    --chart-1: hsl(173.68, 32.2%, 11.57%); /* pine_teal */
+    --chart-2: 33 42% 57%;  /* camel */
+    --chart-3: 107 9% 41%;  /* dusty_olive */
+    --chart-4: 33 87% 65%;  /* sunlit_clay */
+    --chart-5: 22 57% 48%;  /* burnt_caramel */
+  }
+
+  .dark {
+    /* Background: jet_black (#142725) - Fundo floresta profunda */
+    --background: 174 32% 12%;
+    /* Foreground: alabaster_grey-900 (#fafafa) */
+    --foreground: 0 0% 98%;
+    
+    /* Card: pine_teal-300 aprox. (#212f27) */
+    --card: 146 18% 16%;
+    --card-foreground: 0 0% 98%;
+    
+    /* Popover: pine_teal-300 */
+    --popover: 146 18% 16%;
+    --popover-foreground: 0 0% 98%;
+    
+    /* Primary: camel (#c09664) - A madeira se destaca no escuro */
+    --primary: 33 42% 57%;
+    --primary-foreground: 174 32% 12%;
+    
+    /* Secondary: dusty_olive (#647360) */
+    --secondary: 107 9% 41%;
+    --secondary-foreground: 0 0% 98%;
+    
+    /* Muted: jet_black-400 (#11201f) */
+    --muted: 174 31% 10%;
+    /* Muted Foreground: dusty_olive-800 (#c0c8bd) */
+    --muted-foreground: 104 9% 76%;
+    
+    /* Accent: sunlit_clay (#f3ad58) */
+    --accent: 33 87% 65%;
+    --accent-foreground: 174 32% 12%;
+    
+    /* Destructive: burnt_caramel (#bf6835) */
+    --destructive: 22 57% 48%;
+    --destructive-foreground: 0 0% 98%;
+    
+    /* Border/Input: pine_teal (#142725) */
+    --border: hsl(173.68, 32.2%, 11.57%);
+    --input: hsl(173.68, 32.2%, 11.57%);
+    
+    /* Ring: camel (#c09664) */
+    --ring: 33 42% 57%;
+
+    --chart-1: 33 42% 57%;
+    --chart-2: hsl(173.68, 32.2%, 11.57%);
+    --chart-3: 107 9% 41%;
+    --chart-4: 33 87% 65%;
+    --chart-5: 22 57% 48%;
   }
 }
