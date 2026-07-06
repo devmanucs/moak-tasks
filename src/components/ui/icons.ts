@@ -1,12 +1,56 @@
-import { PlusCircleIcon, DumbbellIcon, CheckCircle2Icon, Trash2Icon, ClockIcon, PlusIcon, CalendarDaysIcon } from 'lucide-react-native';
-import { iconWithClassName } from '@/src/lib/iconWithClassName';
+import {
+  CalendarDaysIcon,
+  CheckCircle2Icon,
+  ClockIcon,
+  DumbbellIcon,
+  FlameIcon,
+  LayoutDashboardIcon,
+  ListTodoIcon,
+  MapPinIcon,
+  NavigationIcon,
+  PlusCircleIcon,
+  PlusIcon,
+  TargetIcon,
+  Trash2Icon,
+  TrendingUpIcon,
+  XIcon,
+} from "lucide-react-native";
+import { iconWithClassName } from "@/src/lib/iconWithClassName";
 
-iconWithClassName(PlusCircleIcon);
-iconWithClassName(PlusIcon);
-iconWithClassName(DumbbellIcon);
-iconWithClassName(CheckCircle2Icon);
-iconWithClassName(Trash2Icon);
-iconWithClassName(ClockIcon);
-iconWithClassName(CalendarDaysIcon);
+const icons = [
+  PlusIcon,
+  PlusCircleIcon,
+  DumbbellIcon,
+  CheckCircle2Icon,
+  Trash2Icon,
+  ClockIcon,
+  CalendarDaysIcon,
+  LayoutDashboardIcon,
+  ListTodoIcon,
+  FlameIcon,
+  TargetIcon,
+  TrendingUpIcon,
+  XIcon,
+  MapPinIcon,
+  NavigationIcon,
+];
 
-export { PlusCircleIcon, DumbbellIcon, CheckCircle2Icon, Trash2Icon, ClockIcon, PlusIcon, CalendarDaysIcon };
+icons.forEach(iconWithClassName);
+
+export {
+  PlusCircleIcon,
+  PlusIcon,
+  DumbbellIcon,
+  CheckCircle2Icon,
+  Trash2Icon,
+  ClockIcon,
+  CalendarDaysIcon,
+  LayoutDashboardIcon,
+  ListTodoIcon,
+  FlameIcon,
+  TargetIcon,
+  TrendingUpIcon,
+  XIcon,
+  MapPinIcon,
+  NavigationIcon,
+};

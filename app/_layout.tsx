@@ -47,12 +47,8 @@ export default function RootLayout() {
           translucent={false}
         />
 
-        <Stack
-          screenOptions={{
-            headerShown: false,
-          }}
-        >
-          <Stack.Screen name="index" />
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(tabs)" />
         </Stack>
 
         <PortalHost />
