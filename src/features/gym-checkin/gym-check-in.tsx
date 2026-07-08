@@ -1,25 +1,35 @@
 import { Button } from "@/src/components/ui/button";
-import {
-  CheckCircle2Icon,
-  DumbbellIcon,
-  MapPinIcon,
-  NavigationIcon,
-} from "@/src/components/ui/icons";
+import { GlassCard } from "@/src/components/ui/glass-card";
+import { WorkoutSection } from "@/src/features/gym-checkin/components/workout-section";
 import { ProgressBar } from "@/src/components/ui/progress-bar";
+import { BRAND_CAMEL } from "@/src/lib/colors";
+import type { GymExercise, GymSet } from "@/src/lib/storage";
 import { storage } from "@/src/lib/storage";
+import { useTabBarInset } from "@/src/lib/use-tab-bar-inset";
+import {
+  suggestTemplateForToday,
+  type WorkoutTemplateId,
+} from "@/src/features/gym-checkin/utils/workout-templates";
 import * as Location from "expo-location";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
   RefreshControl,
   ScrollView,
   Text,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Screen } from "@/src/components/ui/screen";
 import { calculateDistance, isWithinGym } from "./utils/distanceCalc";
 
 export function GymCheckinFeature() {
+  const scrollRef = useRef<ScrollView>(null);
+  const listPaddingBottom = useTabBarInset(24);
+  const [keyboardPadding, setKeyboardPadding] = useState(0);
+
   const [gymLocation, setGymLocation] = useState<{
     latitude: number;
     longitude: number;
@@ -29,18 +39,51 @@ export function GymCheckinFeature() {
   const [settingLocation, setSettingLocation] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [checkedInToday, setCheckedInToday] = useState(false);
+  const [exercises, setExercises] = useState<GymExercise[]>([]);
+  const [sets, setSets] = useState<GymSet[]>([]);
+  const [activeTemplate, setActiveTemplate] = useState<WorkoutTemplateId>(
+    suggestTemplateForToday(),
+  );
 
-  useEffect(() => {
-    loadData();
-    requestLocationPermission();
+  const scrollToWorkoutInput = useCallback(() => {
+    requestAnimationFrame(() => {
+      scrollRef.current?.scrollToEnd({ animated: true });
+    });
   }, []);
 
-  async function loadData() {
-    const [location, checkins] = await Promise.all([
-      storage.getGymLocation(),
-      storage.getCheckins(),
-    ]);
+  useEffect(() => {
+    const showEvent =
+      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const hideEvent =
+      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+
+    const showSub = Keyboard.addListener(showEvent, (event) => {
+      setKeyboardPadding(event.endCoordinates.height);
+      scrollToWorkoutInput();
+    });
+    const hideSub = Keyboard.addListener(hideEvent, () => {
+      setKeyboardPadding(0);
+    });
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, [scrollToWorkoutInput]);
+
+  const loadData = useCallback(async () => {
+    const [location, checkins, loadedExercises, loadedSets, template] =
+      await Promise.all([
+        storage.getGymLocation(),
+        storage.getCheckins(),
+        storage.getExercises(),
+        storage.getSets(),
+        storage.getActiveTemplate(),
+      ]);
     setGymLocation(location);
+    setExercises(loadedExercises);
+    setSets(loadedSets);
+    setActiveTemplate(template ?? suggestTemplateForToday());
 
     const today = new Date().toDateString();
     setCheckedInToday(
@@ -48,7 +91,12 @@ export function GymCheckinFeature() {
         (c) => new Date(c.timestamp).toDateString() === today,
       ),
     );
-  }
+  }, []);
+
+  useEffect(() => {
+    loadData();
+    requestLocationPermission();
+  }, [loadData]);
 
   async function onRefresh() {
     setRefreshing(true);
@@ -140,124 +188,134 @@ export function GymCheckinFeature() {
     distance === null ? 0 : Math.max(0, Math.min(100, ((50 - distance) / 50) * 100));
 
   return (
-    <SafeAreaView edges={["top"]} className="flex-1 bg-background">
-      <ScrollView
+    <Screen>
+      <KeyboardAvoidingView
         className="flex-1"
-        contentContainerClassName="px-5 pb-10 pt-4"
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 8 : 0}
       >
-        <View className="mb-6">
-          <Text className="font-fraunces text-3xl text-foreground">
-            Academia
-          </Text>
-          <Text className="mt-1 text-sm text-muted-foreground">
-            Check-in por geolocalização
-          </Text>
-        </View>
-
-        <View className="mb-4 rounded-2xl border border-border bg-card p-5">
-          <View className="mb-4 flex-row items-center gap-3">
-            <View className="h-12 w-12 items-center justify-center rounded-2xl bg-secondary/15">
-              <DumbbellIcon size={24} className="text-secondary" />
-            </View>
-            <View className="flex-1">
-              <Text className="text-base font-semibold text-foreground">
-                Status de hoje
-              </Text>
-              <Text className="text-sm text-muted-foreground">
-                {checkedInToday
-                  ? "Check-in realizado ✓"
-                  : "Ainda não fez check-in hoje"}
-              </Text>
-            </View>
-            {checkedInToday ? (
-              <CheckCircle2Icon size={28} className="text-emerald-600" />
-            ) : null}
+        <ScrollView
+          ref={scrollRef}
+          className="flex-1"
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          contentContainerStyle={{
+            paddingHorizontal: 20,
+            paddingTop: 16,
+            paddingBottom: listPaddingBottom + keyboardPadding,
+          }}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={BRAND_CAMEL}
+            />
+          }
+        >
+          <View className="mb-6">
+            <Text className="font-fraunces text-3xl text-foreground">
+              Academia
+            </Text>
+            <Text className="mt-1 text-sm text-muted-foreground">
+              Check-in e diário de treino
+            </Text>
           </View>
 
-          <Button
-            onPress={handleCheckin}
-            disabled={loading || !gymLocation}
-            className="h-12 rounded-xl"
-          >
-            <NavigationIcon size={18} className="text-primary-foreground" />
-            <Text className="text-sm font-semibold text-primary-foreground">
-              {loading ? "Localizando..." : "Fazer check-in agora"}
+          <GlassCard className="mb-4" contentClassName="p-5">
+            <Text className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+              Status de hoje
             </Text>
-          </Button>
-        </View>
+            <Text className="mt-2 text-base text-foreground">
+              {checkedInToday
+                ? "Check-in realizado"
+                : "Ainda não fez check-in hoje"}
+            </Text>
 
-        {distance !== null && (
-          <View className="mb-4 rounded-2xl border border-border bg-card p-5">
-            <Text className="mb-1 text-sm font-medium text-muted-foreground">
-              Distância até a academia
-            </Text>
-            <Text className="font-fraunces text-4xl text-foreground">
-              {distance.toFixed(0)}m
-            </Text>
-            <View className="mt-4">
-              <ProgressBar
-                progress={proximityPercent}
-                label={distance <= 50 ? "Dentro da área!" : "Aproxime-se mais"}
-                showPercent={false}
-              />
-            </View>
-            <Text
-              className={[
-                "mt-2 text-sm font-semibold",
-                distance <= 50 ? "text-emerald-600" : "text-destructive",
-              ].join(" ")}
+            <Button
+              onPress={handleCheckin}
+              disabled={loading || !gymLocation}
+              className="mt-4 h-12 rounded-xl"
             >
-              {distance <= 50
-                ? "Você está na academia!"
-                : "Muito longe — máximo 50m"}
-            </Text>
-          </View>
-        )}
+              <Text className="text-sm font-semibold text-primary-foreground">
+                {loading ? "Localizando..." : "Fazer check-in agora"}
+              </Text>
+            </Button>
+          </GlassCard>
 
-        <View className="rounded-2xl border border-border bg-card p-5">
-          <View className="mb-4 flex-row items-center gap-2">
-            <MapPinIcon size={18} className="text-primary" />
+          {distance !== null && (
+            <GlassCard className="mb-4" contentClassName="p-5">
+              <Text className="mb-1 text-sm font-medium text-muted-foreground">
+                Distância até a academia
+              </Text>
+              <Text className="font-fraunces text-4xl text-foreground">
+                {distance.toFixed(0)}m
+              </Text>
+              <View className="mt-4">
+                <ProgressBar
+                  progress={proximityPercent}
+                  label={distance <= 50 ? "Dentro da área" : "Aproxime-se mais"}
+                  showPercent={false}
+                />
+              </View>
+              <Text
+                className={[
+                  "mt-2 text-sm font-semibold",
+                  distance <= 50 ? "text-emerald-400" : "text-destructive",
+                ].join(" ")}
+              >
+                {distance <= 50
+                  ? "Você está na academia"
+                  : "Muito longe — máximo 50m"}
+              </Text>
+            </GlassCard>
+          )}
+
+          <GlassCard className="mb-4" contentClassName="p-5">
             <Text className="text-base font-semibold text-foreground">
               Local da academia
             </Text>
-          </View>
 
-          {gymLocation ? (
-            <View className="mb-4 rounded-xl bg-muted/50 p-3">
-              <Text className="font-mono text-xs text-muted-foreground">
-                Lat: {gymLocation.latitude.toFixed(6)}
+            {gymLocation ? (
+              <View className="mb-4 mt-3 rounded-xl bg-muted/60 p-3">
+                <Text className="font-mono text-xs text-muted-foreground">
+                  Lat: {gymLocation.latitude.toFixed(6)}
+                </Text>
+                <Text className="font-mono text-xs text-muted-foreground">
+                  Lon: {gymLocation.longitude.toFixed(6)}
+                </Text>
+              </View>
+            ) : (
+              <Text className="mb-4 mt-2 text-sm text-muted-foreground">
+                Defina onde fica a academia para habilitar o check-in.
               </Text>
-              <Text className="font-mono text-xs text-muted-foreground">
-                Lon: {gymLocation.longitude.toFixed(6)}
-              </Text>
-            </View>
-          ) : (
-            <Text className="mb-4 text-sm text-muted-foreground">
-              Nenhuma localização salva. Defina onde fica a academia para
-              habilitar o check-in.
-            </Text>
-          )}
+            )}
 
-          <Button
-            onPress={handleSetGymLocation}
-            disabled={settingLocation}
-            variant="outline"
-            className="h-12 rounded-xl"
-          >
-            <MapPinIcon size={18} className="text-foreground" />
-            <Text className="text-sm font-semibold text-foreground">
-              {settingLocation
-                ? "Obtendo localização..."
-                : gymLocation
-                  ? "Atualizar localização"
-                  : "Definir localização"}
-            </Text>
-          </Button>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+            <Button
+              onPress={handleSetGymLocation}
+              disabled={settingLocation}
+              variant="outline"
+              className="h-12 rounded-xl border-white/10"
+            >
+              <Text className="text-sm font-semibold text-foreground">
+                {settingLocation
+                  ? "Obtendo localização..."
+                  : gymLocation
+                    ? "Atualizar localização"
+                    : "Definir localização"}
+              </Text>
+            </Button>
+          </GlassCard>
+
+          <WorkoutSection
+            exercises={exercises}
+            sets={sets}
+            activeTemplate={activeTemplate}
+            onTemplateChange={setActiveTemplate}
+            onDataChange={loadData}
+            onScrollToInput={scrollToWorkoutInput}
+          />
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </Screen>
   );
 }

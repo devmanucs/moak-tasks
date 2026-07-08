@@ -1,14 +1,9 @@
 import { Button } from "@/src/components/ui/button";
 import { GlassCard } from "@/src/components/ui/glass-card";
-import { PlusIcon, XIcon } from "@/src/components/ui/icons";
 import { Input } from "@/src/components/ui/input";
-import {
-  DEFAULT_TASK_CATEGORY,
-  TASK_CATEGORIES,
-  type TaskCategory,
-} from "@/src/features/tasks/utils/categories";
+import type { GymExercise } from "@/src/lib/storage";
 import { cn } from "@/src/lib/utils";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   KeyboardAvoidingView,
   Modal,
@@ -20,41 +15,67 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-interface AddTaskSheetProps {
+const MUSCLE_GROUPS = [
+  "Peito",
+  "Costas",
+  "Pernas",
+  "Ombros",
+  "Bíceps",
+  "Tríceps",
+  "Core",
+  "Cardio",
+  "Outro",
+];
+
+interface ExerciseFormSheetProps {
   visible: boolean;
+  exercise?: GymExercise | null;
   onClose: () => void;
-  onSubmit: (
-    title: string,
-    category: TaskCategory,
-    description?: string,
-  ) => void;
+  onSubmit: (data: {
+    name: string;
+    equipment?: string;
+    muscleGroup?: string;
+  }) => void;
 }
 
-export function AddTaskSheet({
+export function ExerciseFormSheet({
   visible,
+  exercise,
   onClose,
   onSubmit,
-}: AddTaskSheetProps) {
+}: ExerciseFormSheetProps) {
   const insets = useSafeAreaInsets();
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [category, setCategory] = useState<TaskCategory>(DEFAULT_TASK_CATEGORY);
+  const isEditing = Boolean(exercise);
+  const [name, setName] = useState("");
+  const [equipment, setEquipment] = useState("");
+  const [muscleGroup, setMuscleGroup] = useState<string | null>(null);
 
-  function resetForm() {
-    setTitle("");
-    setDescription("");
-    setCategory(DEFAULT_TASK_CATEGORY);
+  useEffect(() => {
+    if (!visible) return;
+    setName(exercise?.name ?? "");
+    setEquipment(exercise?.equipment ?? "");
+    setMuscleGroup(exercise?.muscleGroup ?? null);
+  }, [visible, exercise]);
+
+  function reset() {
+    setName("");
+    setEquipment("");
+    setMuscleGroup(null);
   }
 
   function handleSubmit() {
-    if (!title.trim()) return;
-    onSubmit(title.trim(), category, description.trim() || undefined);
-    resetForm();
+    if (!name.trim()) return;
+    onSubmit({
+      name: name.trim(),
+      equipment: equipment.trim() || undefined,
+      muscleGroup: muscleGroup ?? undefined,
+    });
+    reset();
     onClose();
   }
 
   function handleClose() {
-    resetForm();
+    reset();
     onClose();
   }
 
@@ -77,12 +98,11 @@ export function AddTaskSheet({
           />
 
           <GlassCard
-            className="max-h-[88%] rounded-b-none rounded-t-3xl"
+            className="max-h-[85%] rounded-b-none rounded-t-3xl"
             contentClassName="px-0 pt-0"
           >
             <ScrollView
               keyboardShouldPersistTaps="handled"
-              showsVerticalScrollIndicator={false}
               contentContainerStyle={{
                 paddingHorizontal: 24,
                 paddingTop: 16,
@@ -91,70 +111,71 @@ export function AddTaskSheet({
             >
               <View className="mb-6 flex-row items-center justify-between">
                 <Text className="font-fraunces text-xl text-foreground">
-                  Nova tarefa
+                  {isEditing ? "Editar exercício" : "Novo exercício"}
                 </Text>
-                <Button variant="ghost" size="icon" onPress={handleClose}>
-                  <XIcon size={20} className="text-muted-foreground" />
-                </Button>
+                <Pressable onPress={handleClose} hitSlop={8}>
+                  <Text className="text-sm font-semibold text-muted-foreground">
+                    Fechar
+                  </Text>
+                </Pressable>
               </View>
 
               <Text className="mb-2 text-sm font-medium text-muted-foreground">
-                Título
+                Nome do exercício
               </Text>
               <Input
-                value={title}
-                onChangeText={setTitle}
-                placeholder="Ex: Treinar pernas"
-                autoFocus
+                value={name}
+                onChangeText={setName}
+                placeholder="Ex: Supino reto"
                 className="mb-4 h-12 rounded-xl"
               />
 
               <Text className="mb-2 text-sm font-medium text-muted-foreground">
-                Categoria
+                Máquina / equipamento (opcional)
               </Text>
-              <View className="mb-4 flex-row flex-wrap gap-2">
-                {TASK_CATEGORIES.map((item) => (
+              <Input
+                value={equipment}
+                onChangeText={setEquipment}
+                placeholder="Ex: Smith, halteres..."
+                className="mb-4 h-12 rounded-xl"
+              />
+
+              <Text className="mb-2 text-sm font-medium text-muted-foreground">
+                Grupo muscular
+              </Text>
+              <View className="mb-6 flex-row flex-wrap gap-2">
+                {MUSCLE_GROUPS.map((group) => (
                   <Pressable
-                    key={item.id}
-                    onPress={() => setCategory(item.id)}
+                    key={group}
+                    onPress={() =>
+                      setMuscleGroup(muscleGroup === group ? null : group)
+                    }
                     className={cn(
                       "rounded-full px-3 py-2",
-                      category === item.id ? item.badgeBg : "bg-muted",
+                      muscleGroup === group ? "bg-primary/20" : "bg-muted",
                     )}
                   >
                     <Text
                       className={cn(
                         "text-xs font-semibold",
-                        category === item.id
-                          ? item.badgeText
+                        muscleGroup === group
+                          ? "text-primary"
                           : "text-muted-foreground",
                       )}
                     >
-                      {item.label}
+                      {group}
                     </Text>
                   </Pressable>
                 ))}
               </View>
 
-              <Text className="mb-2 text-sm font-medium text-muted-foreground">
-                Descrição (opcional)
-              </Text>
-              <Input
-                value={description}
-                onChangeText={setDescription}
-                placeholder="Detalhes da tarefa..."
-                multiline
-                className="mb-6 min-h-[88px] rounded-xl py-3"
-              />
-
               <Button
                 onPress={handleSubmit}
-                disabled={!title.trim()}
+                disabled={!name.trim()}
                 className="h-12 rounded-xl"
               >
-                <PlusIcon size={18} className="text-primary-foreground" />
                 <Text className="text-sm font-semibold text-primary-foreground">
-                  Adicionar tarefa
+                  {isEditing ? "Salvar alterações" : "Cadastrar exercício"}
                 </Text>
               </Button>
             </ScrollView>

@@ -1,5 +1,7 @@
-import { GymCheckin, Task } from "@/src/lib/storage";
 import { getTasksForToday } from "@/src/features/tasks/utils/constants";
+import { getTemplateById } from "@/src/features/gym-checkin/utils/workout-templates";
+import type { WorkoutTemplateId } from "@/src/features/gym-checkin/utils/workout-templates";
+import type { GymCheckin, GymExercise, GymSet, Task } from "@/src/lib/storage";
 
 export interface DashboardStats {
   todayTotal: number;
@@ -9,6 +11,9 @@ export interface DashboardStats {
   weekCheckins: number;
   totalTasks: number;
   streak: number;
+  todaySets: number;
+  templateExercisesDone: number;
+  templateExercisesTotal: number;
 }
 
 function isSameDay(a: Date, b: Date) {
@@ -48,9 +53,36 @@ export function getCompletionStreak(tasks: Task[]): number {
   return streak;
 }
 
+function getTodaySets(sets: GymSet[]) {
+  const today = new Date().toDateString();
+  return sets.filter((s) => new Date(s.timestamp).toDateString() === today);
+}
+
+function getTemplateProgress(
+  exercises: GymExercise[],
+  sets: GymSet[],
+  templateId: WorkoutTemplateId | null,
+) {
+  if (!templateId) return { done: 0, total: 0 };
+
+  const templateExercises = exercises.filter((e) => e.templateId === templateId);
+  const today = new Date().toDateString();
+  const todayExerciseIds = new Set(
+    sets
+      .filter((s) => new Date(s.timestamp).toDateString() === today)
+      .map((s) => s.exerciseId),
+  );
+
+  const done = templateExercises.filter((e) => todayExerciseIds.has(e.id)).length;
+  return { done, total: templateExercises.length };
+}
+
 export function getDashboardStats(
   tasks: Task[],
   checkins: GymCheckin[],
+  sets: GymSet[] = [],
+  exercises: GymExercise[] = [],
+  activeTemplate: WorkoutTemplateId | null = null,
 ): DashboardStats {
   const todayTasks = getTasksForToday(tasks);
   const todayCompleted = todayTasks.filter((t) => t.completed).length;
@@ -58,6 +90,8 @@ export function getDashboardStats(
   const todayPending = todayTotal - todayCompleted;
   const todayProgress =
     todayTotal === 0 ? 0 : (todayCompleted / todayTotal) * 100;
+
+  const templateProgress = getTemplateProgress(exercises, sets, activeTemplate);
 
   return {
     todayTotal,
@@ -67,6 +101,9 @@ export function getDashboardStats(
     weekCheckins: getWeekCheckins(checkins),
     totalTasks: tasks.length,
     streak: getCompletionStreak(tasks),
+    todaySets: getTodaySets(sets).length,
+    templateExercisesDone: templateProgress.done,
+    templateExercisesTotal: templateProgress.total,
   };
 }
 
@@ -88,18 +125,25 @@ export function formatShortDate(date = new Date()) {
 export function getRecentActivity(
   tasks: Task[],
   checkins: GymCheckin[],
-): { id: string; label: string; time: string; type: "task" | "gym" }[] {
-  const items: { id: string; label: string; time: number; type: "task" | "gym" }[] =
-    [];
+  sets: GymSet[] = [],
+  exercises: GymExercise[] = [],
+): { id: string; label: string; time: string; meta?: string }[] {
+  const exerciseMap = new Map(exercises.map((e) => [e.id, e]));
+  const items: {
+    id: string;
+    label: string;
+    time: number;
+    meta?: string;
+  }[] = [];
 
   tasks
     .filter((t) => t.completed)
     .forEach((t) => {
       items.push({
         id: `task-${t.id}`,
-        label: `Concluiu "${t.title}"`,
+        label: t.title,
         time: t.createdAt,
-        type: "task",
+        meta: "Tarefa",
       });
     });
 
@@ -108,13 +152,27 @@ export function getRecentActivity(
       id: `gym-${c.id}`,
       label: "Check-in na academia",
       time: c.timestamp,
-      type: "gym",
+      meta: "Check-in",
+    });
+  });
+
+  sets.forEach((s) => {
+    const exercise = exerciseMap.get(s.exerciseId);
+    items.push({
+      id: `set-${s.id}`,
+      label: exercise
+        ? `${exercise.name} — ${s.weightKg}kg × ${s.reps}`
+        : `Série registrada`,
+      time: s.timestamp,
+      meta: exercise?.templateId
+        ? `Treino ${exercise.templateId.toUpperCase()}`
+        : "Treino",
     });
   });
 
   return items
     .sort((a, b) => b.time - a.time)
-    .slice(0, 5)
+    .slice(0, 6)
     .map((item) => ({
       ...item,
       time: new Date(item.time).toLocaleString("pt-BR", {
@@ -129,4 +187,16 @@ export function getRecentActivity(
 export function hasCheckedInToday(checkins: GymCheckin[]): boolean {
   const today = new Date();
   return checkins.some((c) => isSameDay(new Date(c.timestamp), today));
+}
+
+export function getPendingTasksPreview(tasks: Task[], limit = 3) {
+  return getTasksForToday(tasks)
+    .filter((t) => !t.completed)
+    .slice(0, limit);
+}
+
+export function getWorkoutTemplateLabel(templateId: WorkoutTemplateId | null) {
+  if (!templateId) return null;
+  const template = getTemplateById(templateId);
+  return `Treino ${template.label} · ${template.name}`;
 }

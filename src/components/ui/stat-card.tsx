@@ -1,11 +1,12 @@
+import type { IconComponent } from "@/src/components/ui/icons";
+import { GlassCard } from "@/src/components/ui/glass-card";
 import { cn } from "@/src/lib/utils";
 import { Text, View } from "react-native";
-import type { LucideIcon } from "lucide-react-native";
 
 interface StatCardProps {
   label: string;
   value: string | number;
-  icon: LucideIcon;
+  icon: IconComponent;
   iconColor?: string;
   iconBg?: string;
   className?: string;
@@ -16,16 +17,11 @@ export function StatCard({
   value,
   icon: Icon,
   iconColor = "text-primary",
-  iconBg = "bg-primary/10",
+  iconBg = "bg-primary/15",
   className,
 }: StatCardProps) {
   return (
-    <View
-      className={cn(
-        "flex-1 rounded-2xl border border-border bg-card p-4 shadow-sm shadow-black/5",
-        className,
-      )}
-    >
+    <GlassCard className={cn("flex-1", className)} contentClassName="p-4">
       <View
         className={cn(
           "mb-3 h-10 w-10 items-center justify-center rounded-xl",
@@ -38,6 +34,6 @@ export function StatCard({
       <Text className="mt-1 text-xs font-medium text-muted-foreground">
         {label}
       </Text>
-    </View>
+    </GlassCard>
   );
 }

@@ -1,4 +1,5 @@
 import { Tabs } from "expo-router";
+import { GlassTabBar } from "@/src/components/ui/glass-tab-bar";
 import {
   DumbbellIcon,
   LayoutDashboardIcon,
@@ -8,22 +9,10 @@ import {
 export default function TabsLayout() {
   return (
     <Tabs
+      tabBar={(props) => <GlassTabBar {...props} />}
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: "#c09664",
-        tabBarInactiveTintColor: "#647360",
-        tabBarStyle: {
-          backgroundColor: "#ffffff",
-          borderTopColor: "#e8e8e8",
-          borderTopWidth: 1,
-          height: 64,
-          paddingBottom: 8,
-          paddingTop: 8,
-        },
-        tabBarLabelStyle: {
-          fontFamily: "Inter-SemiBold",
-          fontSize: 11,
-        },
+        sceneStyle: { backgroundColor: "transparent" },
       }}
     >
       <Tabs.Screen

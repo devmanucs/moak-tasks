@@ -34,7 +34,7 @@ export function ProgressBar({
       )}
       <View className="h-3 overflow-hidden rounded-full bg-muted">
         <View
-          className="h-full rounded-full bg-secondary"
+          className="h-full rounded-full bg-primary"
           style={{ width: `${clamped}%` }}
         />
       </View>
